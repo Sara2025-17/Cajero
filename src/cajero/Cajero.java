@@ -16,20 +16,17 @@ public class Cajero {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        HashMap<Integer, Integer> retiro = new HashMap<>();
+        HashMap<Integer, Integer> billete = new HashMap<>();
         var num = new HashMap<Integer, Integer>();
-        retiro.put(10000, 100);
-        retiro.put(20000, 100);
-        retiro.put(50000, 100);
-        retiro.put(100000, 100);
+        billete.put(10000, 100);
+        billete.put(20000, 100);
+        billete.put(50000, 100);
+        billete.put(100000, 100);
         
-        // Crear una instancia de tu ventana gráfica
         interfaz4 ventana = new interfaz4();
         
-        // Centrar la ventana en la pantalla (opcional pero muy recomendado)
         ventana.setLocationRelativeTo(null);
         
-        // Hacer la ventana visible al usuario
         ventana.setVisible(true);
     }
     
