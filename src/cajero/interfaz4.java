@@ -15,6 +15,7 @@ public class interfaz4 extends javax.swing.JFrame {
      */
     public interfaz4() {
         initComponents();
+        Pantalla.setText("Qué monto desea retirar: ");
     }
 
     public java.util.HashMap<Integer, Integer> inventarioBilletes;
@@ -39,10 +40,9 @@ public class interfaz4 extends javax.swing.JFrame {
         }
     }
     
-    private void agregarNumero(String numero) {
+    public void agregarNumero(String numero) {
         String textoActual = Pantalla.getText();
-    
-        if (textoActual.contains("Ingresar monto")) {
+        if (textoActual.contains(" ")) {
             Pantalla.setText(numero);
         } else {
             Pantalla.setText(textoActual + numero);
@@ -94,7 +94,6 @@ public class interfaz4 extends javax.swing.JFrame {
 
         Pantalla.setColumns(20);
         Pantalla.setRows(5);
-        Pantalla.setText("Ingresar monto a retirar: ");
         jScrollPane1.setViewportView(Pantalla);
 
         btn1.setText("1");
@@ -203,6 +202,11 @@ public class interfaz4 extends javax.swing.JFrame {
             }
         ));
         jScrollPane4.setViewportView(Tabla);
+        if (Tabla.getColumnModel().getColumnCount() > 0) {
+            Tabla.getColumnModel().getColumn(0).setHeaderValue("Billete");
+            Tabla.getColumnModel().getColumn(1).setHeaderValue("Billetes Disponibles");
+            Tabla.getColumnModel().getColumn(2).setHeaderValue("Total");
+        }
 
         btnCancelar.setBackground(new java.awt.Color(255, 105, 97));
         btnCancelar.setText("Cancelar");
@@ -216,13 +220,10 @@ public class interfaz4 extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jScrollPane1))
-                    .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
-                    .addGroup(layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(btn7)
@@ -251,10 +252,11 @@ public class interfaz4 extends javax.swing.JFrame {
                             .addComponent(btnIngresar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(btnCancelar, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(27, 27, 27))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                    .addGroup(layout.createSequentialGroup()
                         .addGap(19, 19, 19)
                         .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -263,10 +265,10 @@ public class interfaz4 extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(12, 12, 12)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(12, 12, 12)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(btn1)
                             .addComponent(btn2)
@@ -341,23 +343,24 @@ public class interfaz4 extends javax.swing.JFrame {
         try {
         String cantidad = Pantalla.getText();
         if (cantidad.isEmpty()) {
-            Pantalla.setText("Por favor digite un monto");
+            Pantalla.setText("Por favor digite un monto ");
             return;
         }
         int monto = Integer.parseInt(cantidad);
         if (monto % 10 != 0) {
-            Pantalla.setText("El monto debe ser múltiplo de 10");
+            Pantalla.setText("El monto debe ser múltiplo de 10 ");
             return;
         }
         if (monto < 10000 || monto > 1000000) {
-            Pantalla.setText("El Monto esta fuera de rango");
+            Pantalla.setText("El Monto esta fuera de rango ");
             return;
         }
-        Pantalla.setText("Monto válido: " + monto + "\nProcesando retiro...");
+        Pantalla.setText("Transacción exitosa! \nRetiraste: " + monto);
         cargarDatosTabla();
         }catch (NumberFormatException e) {
             Pantalla.setText("Ingrese solo números válidos");
         }
+        
     }//GEN-LAST:event_btnIngresarActionPerformed
 
     private void btnCorreccionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCorreccionActionPerformed
@@ -369,7 +372,7 @@ public class interfaz4 extends javax.swing.JFrame {
 
     private void btnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarActionPerformed
         Pantalla.setText("");
-        Pantalla.setText("Ingresar monto a retirar: ");
+        Pantalla.setText("Qué monto desea retirar: ");
     }//GEN-LAST:event_btnCancelarActionPerformed
 
     /**
