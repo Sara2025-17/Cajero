@@ -351,11 +351,83 @@ public class interfaz4 extends javax.swing.JFrame {
             Pantalla.setText("El monto debe ser múltiplo de 10 ");
             return;
         }
+        if (monto % 1000 != 0 ){
+            Pantalla.setText("Ingresar monto valido ");
+            return;
+        }
         if (monto < 10000 || monto > 1000000) {
             Pantalla.setText("El Monto esta fuera de rango ");
             return;
         }
-        Pantalla.setText("Transacción exitosa! \nRetiraste: " + monto);
+        
+        int cienk = 0, cincuentak = 0, veintek = 0, diesk = 0;
+        int temp = monto;
+        
+        if (monto == 50000){
+            veintek = 2;
+            diesk = 1;
+        }else if (monto == 100000){
+            cincuentak = 1;
+            veintek = 2;
+            diesk = 1;
+        } else {
+            if (monto > 100000) {
+            cincuentak += 1;
+            veintek += 2;
+            diesk += 1;
+            temp -= 100000;
+            }
+        
+        if (temp >= 100000) {
+            cienk += temp / 100000;
+            temp %= 100000;
+        }
+        if (temp >= 50000) {
+            cincuentak += temp / 50000;
+            temp %= 50000;
+        }
+        if (temp >= 20000) {
+            veintek += temp / 0000;
+            temp %= 20000;
+        }
+        if (temp >= 10000) {
+            diesk += temp / 10000;
+            temp %= 10000;
+        }
+        
+        }
+        
+        int dispensar100 = inventarioBilletes.getOrDefault(100000, 0);
+        int dispensar50 = inventarioBilletes.getOrDefault(50000, 0);
+        int dispensar20 = inventarioBilletes.getOrDefault(20000, 0);
+        int dispensar10 = inventarioBilletes.getOrDefault(10000, 0);
+        
+        if (dispensar100 < cienk || dispensar50 < cincuentak || dispensar20 < veintek || dispensar10 < diesk) {
+            Pantalla.setText("No hay fondo de billete en el cajero");
+            return;
+        }
+        
+        inventarioBilletes.put(100000, dispensar100 - cienk);
+        inventarioBilletes.put(50000, dispensar50 - cincuentak);
+        inventarioBilletes.put(20000, dispensar20 - veintek);
+        inventarioBilletes.put(10000, dispensar10 - diesk);
+        
+        String mensaje = "Su transacción fue realizada con éxito.\nEl retiro fue de un valor de $" + monto + "\nBilletes entregados:";
+
+        if (cienk > 0) {
+            mensaje += "\n- 100k: " + cienk;
+        }
+        if (cincuentak > 0) {
+            mensaje += "\n- 50k: " + cincuentak;
+        }
+        if (veintek > 0) {
+            mensaje += "\n- 20k: " + veintek;
+        }
+        if (diesk > 0) {
+            mensaje += "\n- 10k: " + diesk;
+        }
+        Pantalla.setText(mensaje);
+        
         cargarDatosTabla();
         }catch (NumberFormatException e) {
             Pantalla.setText("Ingrese solo números válidos");
