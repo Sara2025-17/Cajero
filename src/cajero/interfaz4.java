@@ -13,12 +13,23 @@ public class interfaz4 extends javax.swing.JFrame {
     /**
      * Creates new form interfaz4
      */
+
+     
+    public java.util.HashMap<Integer, Integer> inventarioBilletes;
+
     public interfaz4() {
         initComponents();
         Pantalla.setText("Qué monto desea retirar: ");
+        this.inventarioBilletes = new java.util.HashMap<>();
+        this.inventarioBilletes.put(10000, 100);
+        this.inventarioBilletes.put(20000, 100);
+        this.inventarioBilletes.put(50000, 100);
+        this.inventarioBilletes.put(100000, 100);
+        cargarDatosTabla(); 
+        
     }
 
-    public java.util.HashMap<Integer, Integer> inventarioBilletes;
+
 
     public void setInventario(java.util.HashMap<Integer, Integer> billete) {
         this.inventarioBilletes = billete;
@@ -351,7 +362,7 @@ public class interfaz4 extends javax.swing.JFrame {
             Pantalla.setText("El monto debe ser múltiplo de 10 ");
             return;
         }
-        if (monto % 1000 != 0 ){
+        if (monto % 10000 != 0 ){
             Pantalla.setText("Ingresar monto valido ");
             return;
         }
@@ -387,7 +398,7 @@ public class interfaz4 extends javax.swing.JFrame {
             temp %= 50000;
         }
         if (temp >= 20000) {
-            veintek += temp / 0000;
+            veintek += temp / 20000;
             temp %= 20000;
         }
         if (temp >= 10000) {
@@ -415,16 +426,16 @@ public class interfaz4 extends javax.swing.JFrame {
         String mensaje = "Su transacción fue realizada con éxito.\nEl retiro fue de un valor de $" + monto + "\nBilletes entregados:";
 
         if (cienk > 0) {
-            mensaje += "\n- 100k: " + cienk;
+            mensaje += "\n 100k: " + cienk;
         }
         if (cincuentak > 0) {
-            mensaje += "\n- 50k: " + cincuentak;
+            mensaje += "\n 50k: " + cincuentak;
         }
         if (veintek > 0) {
-            mensaje += "\n- 20k: " + veintek;
+            mensaje += "\n 20k: " + veintek;
         }
         if (diesk > 0) {
-            mensaje += "\n- 10k: " + diesk;
+            mensaje += "\n 10k: " + diesk;
         }
         Pantalla.setText(mensaje);
         
