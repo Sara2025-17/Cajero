@@ -16,15 +16,8 @@ public class Cajero {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        HashMap<Integer, Integer> billete = new HashMap<>();
-        billete.put(10000, 100);
-        billete.put(20000, 100);
-        billete.put(50000, 100);
-        billete.put(100000, 100);
         
         interfaz4 ventana = new interfaz4();
-        
-        ventana.setInventario(billete); 
         
         ventana.setLocationRelativeTo(null);
         
