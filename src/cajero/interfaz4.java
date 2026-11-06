@@ -4,6 +4,11 @@
  */
 package cajero;
 
+import javax.swing.table.DefaultTableModel;
+import javax.swing.*;
+//descargar librería JDBC en https://www.mysql.com/products/connector/
+import java.sql.*;
+
 /**
  *
  * @author ASUS
@@ -28,6 +33,21 @@ public class interfaz4 extends javax.swing.JFrame {
         cargarDatosTabla(); 
         
     }
+    
+    public Connection conectar(){
+       String usuario="sara";
+       String contrasena= "#3Programacion3"; 
+       String url= "jdbc:mysql://72.167.84.254:3306/banco"; //"jdbc:mysql://localhost:3306/agenda"; 
+       Connection con=null;
+       try{         
+          con= DriverManager.getConnection(url,usuario,contrasena);
+          Pantalla.setText("Conexión correcta");
+          return con;
+       }catch (Exception e){
+          Pantalla.setText("Conexión incorrecta: " + e.getMessage()); 
+          return null;
+       }
+   }
 
 
 
