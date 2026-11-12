@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
+
 package cajero;
 
 import javax.swing.table.DefaultTableModel;
@@ -14,23 +11,23 @@ import java.sql.*;
  * @author ASUS
  */
 public class interfaz4 extends javax.swing.JFrame {
-
-    /**
-     * Creates new form interfaz4
-     */
-
+    
      
     public java.util.HashMap<Integer, Integer> inventarioBilletes;
+    
+    public int idCajeroActual = 1; 
+    public int cuentaClienteActual = 0;
+    private String inputActual = "";
+    private int pasoActual = 0;
 
     public interfaz4() {
         initComponents();
-        Pantalla.setText("Qué monto desea retirar: ");
+        Pantalla.setText("Ingrese el ID del Cajero del que desea retirar: ");
         this.inventarioBilletes = new java.util.HashMap<>();
         this.inventarioBilletes.put(10000, 100);
         this.inventarioBilletes.put(20000, 100);
         this.inventarioBilletes.put(50000, 100);
         this.inventarioBilletes.put(100000, 100);
-        cargarDatosTabla(); 
         
     }
     
@@ -57,27 +54,61 @@ public class interfaz4 extends javax.swing.JFrame {
     }
 
     public void cargarDatosTabla() {
-        javax.swing.table.DefaultTableModel modelo = (javax.swing.table.DefaultTableModel) Tabla.getModel();
-        modelo.setRowCount(0);
-    
-        int[] denominaciones = {10000, 20000, 50000, 100000};
-    
-        for (int den : denominaciones) {
-            if (inventarioBilletes != null && inventarioBilletes.containsKey(den)) {
-                int cantidad = inventarioBilletes.get(den);
-                int total = den * cantidad;
-                modelo.addRow(new Object[]{den, cantidad, total});
+        Connection con = conectar();
+        if (con == null) return;
+        
+        try {
+            String sql = "SELECT ndiez, nveinte, ncincuenta, ncien FROM cajeros WHERE id = ?";
+            PreparedStatement pst = con.prepareStatement(sql);
+            pst.setInt(1, idCajeroActual);
+            ResultSet rs = pst.executeQuery();
+            
+            if (rs.next()) {
+                int ndiez = rs.getInt("ndiez");
+                int nveinte = rs.getInt("nveinte");
+                int ncincuenta = rs.getInt("ncincuenta");
+                int ncien = rs.getInt("ncien");
+                
+                DefaultTableModel modelo = (DefaultTableModel) Tabla.getModel();
+                modelo.setRowCount(0);
+                modelo.addRow(new Object[]{10000, ndiez, 10000 * ndiez});
+                modelo.addRow(new Object[]{20000, nveinte, 20000 * nveinte});
+                modelo.addRow(new Object[]{50000, ncincuenta, 50000 * ncincuenta});
+                modelo.addRow(new Object[]{100000, ncien, 100000 * ncien});
             }
+            rs.close();
+            pst.close();
+            con.close();
+        } catch (SQLException e) {
+            System.out.println("Error al cargar inventario: " + e.getMessage());
         }
     }
     
-    public void agregarNumero(String numero) {
-        String textoActual = Pantalla.getText();
-        if (textoActual.contains(" ")) {
-            Pantalla.setText(numero);
-        } else {
-            Pantalla.setText(textoActual + numero);
+    public void liberarSistema(Connection con) {
+        try {
+            PreparedStatement pst1 = con.prepareStatement("UPDATE cajeros SET estado = 0 WHERE id = ?");
+            pst1.setInt(1, idCajeroActual);
+            pst1.executeUpdate();
+            pst1.close();
+
+            PreparedStatement pst2 = con.prepareStatement("UPDATE clientes SET estado = 0 WHERE ncuenta = ?");
+            pst2.setInt(1, cuentaClienteActual);
+            pst2.executeUpdate();
+            pst2.close();
+            con.close();
+        } catch (SQLException e) {
+            System.out.println("Error al liberar el sistema: " + e.getMessage());
         }
+    }
+    public void agregarNumero(String numero) {
+    inputActual += numero;
+    if (pasoActual == 0) {
+        Pantalla.setText("Ingrese el ID del Cajero (1 - 7):\n> " + inputActual);
+    } else if (pasoActual == 1) {
+        Pantalla.setText("Ingrese el No. de CUENTA:\n> " + inputActual);
+    } else {
+        Pantalla.setText("Ingrese el MONTO:\n> " + inputActual);
+    }
     }
     
     @SuppressWarnings("unchecked")
@@ -253,9 +284,8 @@ public class interfaz4 extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addContainerGap(64, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(btn7)
                             .addComponent(btn4)
@@ -283,11 +313,14 @@ public class interfaz4 extends javax.swing.JFrame {
                             .addComponent(btnIngresar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(btnCancelar, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(27, 27, 27))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 330, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(19, 19, 19)
                         .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -295,9 +328,9 @@ public class interfaz4 extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(12, 12, 12)
+                .addGap(64, 64, 64)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -322,9 +355,9 @@ public class interfaz4 extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btn0)
                     .addComponent(btnCorreccion))
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(14, 14, 14))
+                .addGap(19, 19, 19))
         );
 
         pack();
@@ -371,111 +404,203 @@ public class interfaz4 extends javax.swing.JFrame {
     }//GEN-LAST:event_btn0ActionPerformed
 
     private void btnIngresarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIngresarActionPerformed
-        try {
-        String cantidad = Pantalla.getText();
-        if (cantidad.isEmpty()) {
-            Pantalla.setText("Por favor digite un monto ");
+    if (inputActual.isEmpty()) {
+            Pantalla.setText("Por favor, ingrese un valor usando el teclado.");
             return;
         }
-        int monto = Integer.parseInt(cantidad);
-        if (monto % 10 != 0) {
-            Pantalla.setText("El monto debe ser múltiplo de 10 ");
-            return;
-        }
-        if (monto % 10000 != 0 ){
-            Pantalla.setText("Ingresar monto valido ");
-            return;
-        }
-        if (monto < 10000 || monto > 1000000) {
-            Pantalla.setText("El Monto esta fuera de rango ");
-            return;
-        }
-        
-        int cienk = 0, cincuentak = 0, veintek = 0, diesk = 0;
-        int temp = monto;
-        
-        if (monto == 50000){
-            veintek = 2;
-            diesk = 1;
-        }else if (monto == 100000){
-            cincuentak = 1;
-            veintek = 2;
-            diesk = 1;
-        } else {
-            if (monto > 100000) {
-            cincuentak += 1;
-            veintek += 2;
-            diesk += 1;
-            temp -= 100000;
-            }
-        
-        if (temp >= 100000) {
-            cienk += temp / 100000;
-            temp %= 100000;
-        }
-        if (temp >= 50000) {
-            cincuentak += temp / 50000;
-            temp %= 50000;
-        }
-        if (temp >= 20000) {
-            veintek += temp / 20000;
-            temp %= 20000;
-        }
-        if (temp >= 10000) {
-            diesk += temp / 10000;
-            temp %= 10000;
-        }
-        
-        }
-        
-        int dispensar100 = inventarioBilletes.getOrDefault(100000, 0);
-        int dispensar50 = inventarioBilletes.getOrDefault(50000, 0);
-        int dispensar20 = inventarioBilletes.getOrDefault(20000, 0);
-        int dispensar10 = inventarioBilletes.getOrDefault(10000, 0);
-        
-        if (dispensar100 < cienk || dispensar50 < cincuentak || dispensar20 < veintek || dispensar10 < diesk) {
-            Pantalla.setText("No hay fondo de billete en el cajero");
-            return;
-        }
-        
-        inventarioBilletes.put(100000, dispensar100 - cienk);
-        inventarioBilletes.put(50000, dispensar50 - cincuentak);
-        inventarioBilletes.put(20000, dispensar20 - veintek);
-        inventarioBilletes.put(10000, dispensar10 - diesk);
-        
-        String mensaje = "Su transacción fue realizada con éxito.\nEl retiro fue de un valor de $" + monto + "\nBilletes entregados:";
 
-        if (cienk > 0) {
-            mensaje += "\n 100k: " + cienk;
-        }
-        if (cincuentak > 0) {
-            mensaje += "\n 50k: " + cincuentak;
-        }
-        if (veintek > 0) {
-            mensaje += "\n 20k: " + veintek;
-        }
-        if (diesk > 0) {
-            mensaje += "\n 10k: " + diesk;
-        }
-        Pantalla.setText(mensaje);
-        
-        cargarDatosTabla();
-        }catch (NumberFormatException e) {
+        Connection con = conectar();
+        if (con == null) return;
+
+        try {
+            if (pasoActual == 0) {
+            idCajeroActual = Integer.parseInt(inputActual);
+    
+            PreparedStatement pstCajTest = con.prepareStatement("SELECT * FROM cajeros WHERE id = ?");
+            pstCajTest.setInt(1, idCajeroActual);
+            ResultSet rsCajTest = pstCajTest.executeQuery();
+    
+            if (!rsCajTest.next()) {
+                Pantalla.setText("El Cajero con ID " + idCajeroActual + " no existe.\nIngrese ID de Cajero (1 - 7):\n> ");
+                rsCajTest.close();
+                pstCajTest.close();
+                con.close();
+                inputActual = ""; 
+                return;
+            }
+            rsCajTest.close();
+            pstCajTest.close();
+            con.close();
+
+            cargarDatosTabla();
+
+            pasoActual = 1;
+            inputActual = "";
+            Pantalla.setText("Cajero #" + idCajeroActual + " seleccionado.\nIngrese el No. de CUENTA:\n> ");
+            } else if (pasoActual == 1) {
+
+                cuentaClienteActual = Integer.parseInt(inputActual);
+                
+                PreparedStatement pstCli = con.prepareStatement("SELECT nombre, saldo FROM clientes WHERE ncuenta = ?");
+                pstCli.setInt(1, cuentaClienteActual);
+                ResultSet rsCli = pstCli.executeQuery();
+                
+                if (!rsCli.next()) {
+                    Pantalla.setText("La cuenta bancaria no existe.\nIngrese el No. de CUENTA:");
+                    rsCli.close();
+                    pstCli.close();
+                    con.close();
+                    inputActual = "";
+                    return;
+                }
+                
+                String nombreCliente = rsCli.getString("nombre");
+                rsCli.close();
+                pstCli.close();
+                con.close();
+
+                pasoActual = 2;
+                inputActual = "";
+                Pantalla.setText("Cliente: " + nombreCliente + "\nIngrese el MONTO a retirar:");
+
+            } else if (pasoActual == 2) {
+                int monto = Integer.parseInt(inputActual);
+                
+                if (monto % 10 != 0 || monto % 10000 != 0) {
+                    Pantalla.setText("Ingrese monto válido (múltiplos de 10k)");
+                    inputActual = "";
+                    con.close();
+                    return;
+                }
+                if (monto < 10000 || monto > 1000000) {
+                    Pantalla.setText("Monto fuera de rango ($10k - $1M)");
+                    inputActual = "";
+                    con.close();
+                    return;
+                }
+
+                PreparedStatement pstBloqCajero = con.prepareStatement("UPDATE cajeros SET estado = 1 WHERE id = ?");
+                pstBloqCajero.setInt(1, idCajeroActual);
+                pstBloqCajero.executeUpdate();
+                pstBloqCajero.close();
+
+                PreparedStatement pstBloqCliente = con.prepareStatement("UPDATE clientes SET estado = 1 WHERE ncuenta = ?");
+                pstBloqCliente.setInt(1, cuentaClienteActual);
+                pstBloqCliente.executeUpdate();
+                pstBloqCliente.close();
+
+                PreparedStatement pstCli = con.prepareStatement("SELECT nombre, saldo FROM clientes WHERE ncuenta = ?");
+                pstCli.setInt(1, cuentaClienteActual);
+                ResultSet rsCli = pstCli.executeQuery();
+                rsCli.next();
+                String nombreCliente = rsCli.getString("nombre");
+                double saldoCliente = rsCli.getDouble("saldo");
+                rsCli.close();
+                pstCli.close();
+
+                if (saldoCliente < monto) {
+                    Pantalla.setText("Saldo insuficiente. Su saldo es: $" + saldoCliente);
+                    liberarSistema(con);
+                    inputActual = "";
+                    pasoActual = 1; // Vuelve a pedir cuenta
+                    con.close();
+                    return;
+                }
+
+                PreparedStatement pstCaj = con.prepareStatement("SELECT ndiez, nveinte, ncincuenta, ncien FROM cajeros WHERE id = ?");
+                pstCaj.setInt(1, idCajeroActual);
+                ResultSet rsCaj = pstCaj.executeQuery();
+                rsCaj.next();
+                int stock10 = rsCaj.getInt("ndiez");
+                int stock20 = rsCaj.getInt("nveinte");
+                int stock50 = rsCaj.getInt("ncincuenta");
+                int stock100 = rsCaj.getInt("ncien");
+                rsCaj.close();
+                pstCaj.close();
+
+                int cienk = 0, cincuentak = 0, veintek = 0, diesk = 0;
+                int temp = monto;
+                
+                if (monto == 50000){
+                    veintek = 2; diesk = 1;
+                } else if (monto == 100000){
+                    cincuentak = 1; veintek = 2; diesk = 1;
+                } else {
+                    if (monto > 100000) {
+                        cincuentak += 1; veintek += 2; diesk += 1; temp -= 100000;
+                    }
+                    if (temp >= 100000) { cienk += temp / 100000; temp %= 100000; }
+                    if (temp >= 50000) { cincuentak += temp / 50000; temp %= 50000; }
+                    if (temp >= 20000) { veintek += temp / 20000; temp %= 20000; }
+                    if (temp >= 10000) { diesk += temp / 10000; temp %= 10000; }
+                }
+
+                if (stock100 < cienk || stock50 < cincuentak || stock20 < veintek || stock10 < diesk) {
+                    Pantalla.setText("No hay fondo suficiente de billetes en este cajero.");
+                    liberarSistema(con);
+                    inputActual = "";
+                    pasoActual = 1;
+                    con.close();
+                    return;
+                }
+
+                double nuevoSaldo = saldoCliente - monto;
+                PreparedStatement pstUpCli = con.prepareStatement("UPDATE clientes SET saldo = ? WHERE ncuenta = ?");
+                pstUpCli.setDouble(1, nuevoSaldo);
+                pstUpCli.setInt(2, cuentaClienteActual);
+                pstUpCli.executeUpdate();
+                pstUpCli.close();
+
+                PreparedStatement pstUpCaj = con.prepareStatement("UPDATE cajeros SET ndiez = ?, nveinte = ?, ncincuenta = ?, ncien = ? WHERE id = ?");
+                pstUpCaj.setInt(1, stock10 - diesk);
+                pstUpCaj.setInt(2, stock20 - veintek);
+                pstUpCaj.setInt(3, stock50 - cincuentak);
+                pstUpCaj.setInt(4, stock100 - cienk);
+                pstUpCaj.setInt(5, idCajeroActual);
+                pstUpCaj.executeUpdate();
+                pstUpCaj.close();
+
+                liberarSistema(con);
+
+                String mensaje = "¡Retiro exitoso en Cajero #" + idCajeroActual + "!\nCliente: " + nombreCliente + "\nRetiro: $" + monto + "\nBilletes:";
+                if (cienk > 0) mensaje += "\n- 100k: " + cienk;
+                if (cincuentak > 0) mensaje += "\n- 50k: " + cincuentak;
+                if (veintek > 0) mensaje += "\n- 20k: " + veintek;
+                if (diesk > 0) mensaje += "\n- 10k: " + diesk;
+                mensaje += "\nSaldo restante: $" + nuevoSaldo;
+                
+                Pantalla.setText(mensaje);
+                cargarDatosTabla(); 
+
+                inputActual = "";
+                pasoActual = 0; 
+                con.close();
+            }
+
+        } catch (NumberFormatException e) {
             Pantalla.setText("Ingrese solo números válidos");
+            inputActual = "";
+        } catch (SQLException e) {
+            Pantalla.setText("Error SQL: " + e.getMessage());
+            inputActual = "";
         }
-        
     }//GEN-LAST:event_btnIngresarActionPerformed
 
     private void btnCorreccionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCorreccionActionPerformed
-        String texto = Pantalla.getText();
-        if (texto.length()>0){
-            Pantalla.setText(texto.substring(0, texto.length()-1));
+        if (inputActual.length() > 0) {
+        inputActual = inputActual.substring(0, inputActual.length() - 1);
+        Pantalla.setText("> " + inputActual);
         }
     }//GEN-LAST:event_btnCorreccionActionPerformed
 
     private void btnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarActionPerformed
-        Pantalla.setText("");
-        Pantalla.setText("Qué monto desea retirar: ");
+        Connection con = conectar();
+        if (con != null) {
+            liberarSistema(con);
+        }
+        inputActual = "";
+        pasoActual = 0;
+        Pantalla.setText("Ingrese el ID del Cajero (1 - 7):\n> ");
     }//GEN-LAST:event_btnCancelarActionPerformed
 
     /**
