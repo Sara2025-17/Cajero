@@ -19,10 +19,11 @@ public class interfaz4 extends javax.swing.JFrame {
     public int cuentaClienteActual = 0;
     private String inputActual = "";
     private int pasoActual = 0;
+    int tipoOperacion = 0; 
 
     public interfaz4() {
         initComponents();
-        Pantalla.setText("Ingrese el ID del Cajero del que desea retirar: ");
+        Pantalla.setText("Seleccione:\n1. Consignación\n0. Retiro\n> ");
         this.inventarioBilletes = new java.util.HashMap<>();
         this.inventarioBilletes.put(10000, 100);
         this.inventarioBilletes.put(20000, 100);
@@ -101,8 +102,10 @@ public class interfaz4 extends javax.swing.JFrame {
     public void agregarNumero(String numero) {
         inputActual += numero;
         if (pasoActual == 0) {
-            Pantalla.setText("Ingrese el ID del Cajero (1 - 7): " + inputActual);
+            Pantalla.setText("Seleccione:\n1. Consignación\n0. Retiro\n> " + inputActual);
         } else if (pasoActual == 1) {
+            Pantalla.setText("Ingrese el ID del Cajero: " + inputActual);
+        } else if (pasoActual == 2) {
             Pantalla.setText("Ingrese el No. de CUENTA: " + inputActual);
         } else {
             Pantalla.setText("Ingrese el MONTO: " + inputActual);
@@ -417,147 +420,169 @@ public class interfaz4 extends javax.swing.JFrame {
 
     private void btnIngresarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIngresarActionPerformed
     if (inputActual.isEmpty()) {
-            Pantalla.setText("Por favor, ingrese un valor usando el teclado.");
-            return;
-        }
+        Pantalla.setText("Por favor, ingrese un valor usando el teclado.");
+        return;
+    }
 
-        Connection con = conectar();
-        if (con == null) return;
+    Connection con = conectar();
+    if (con == null) return;
 
-        try {
-            if (pasoActual == 0) {
-                idCajeroActual = Integer.parseInt(inputActual);
-                
-                PreparedStatement probarCajero = con.prepareStatement("SELECT * FROM cajeros WHERE id = ?");
-                probarCajero.setInt(1, idCajeroActual);
-                ResultSet resultadoCajero = probarCajero.executeQuery();
-                
-                if (!resultadoCajero.next()) {
-                    Pantalla.setText("El Cajero con ID " + idCajeroActual + " no existe.\nIngrese ID de Cajero (1 - 7):\n ");
-                    resultadoCajero.close();
-                    probarCajero.close();
-                    con.close();
-                    inputActual = ""; 
-                    return;
-                }
+    try {
+        if (pasoActual == 0) {
+            int opcion = Integer.parseInt(inputActual);
+            
+            if (opcion != 0 && opcion != 1) {
+                Pantalla.setText("Opción no válida.\nSeleccione:\n1. Consignación\n0. Retiro\n> ");
+                inputActual = "";
+                con.close();
+                return;
+            }
+            
+            tipoOperacion = opcion; 
+            pasoActual = 1;         
+            inputActual = "";
+            
+            String nombreOp = (tipoOperacion == 1) ? "Consignación" : "Retiro";
+            Pantalla.setText("Operación seleccionada: " + nombreOp + "\nIngrese ID de Cajero (1 - 7):\n> ");
+            con.close();
+
+        } else if (pasoActual == 1) {
+            idCajeroActual = Integer.parseInt(inputActual);
+            
+            PreparedStatement probarCajero = con.prepareStatement("SELECT * FROM cajeros WHERE id = ?");
+            probarCajero.setInt(1, idCajeroActual);
+            ResultSet resultadoCajero = probarCajero.executeQuery();
+            
+            if (!resultadoCajero.next()) {
+                Pantalla.setText("El Cajero con ID " + idCajeroActual + " no existe.\nIngrese ID de Cajero:\n> ");
                 resultadoCajero.close();
                 probarCajero.close();
                 con.close();
+                inputActual = ""; 
+                return;
+            }
+            resultadoCajero.close();
+            probarCajero.close();
+            con.close();
 
-                cargarDatosTabla();
+            cargarDatosTabla();
 
-                pasoActual = 1;
-                inputActual = "";
-                Pantalla.setText("Cajero #" + idCajeroActual + " seleccionado.\nIngrese el No. de CUENTA:\n> ");
+            pasoActual = 2; 
+            inputActual = "";
+            Pantalla.setText("Cajero #" + idCajeroActual + " seleccionado.\nIngrese el No. de CUENTA:\n ");
 
-            } else if (pasoActual == 1) {
-
-                cuentaClienteActual = Integer.parseInt(inputActual);
-                
-                PreparedStatement probarCliente = con.prepareStatement("SELECT nombre, saldo FROM clientes WHERE ncuenta = ?");
-                probarCliente.setInt(1, cuentaClienteActual);
-                ResultSet resultadoCliente = probarCliente.executeQuery();
-                
-                if (!resultadoCliente.next()) {
-                    Pantalla.setText("La cuenta bancaria no existe.\nIngrese el No. de CUENTA:\n ");
-                    resultadoCliente.close();
-                    probarCliente.close();
-                    con.close();
-                    inputActual = "";
-                    return;
-                }
-                
-                String nombreCliente = resultadoCliente.getString("nombre");
+        } else if (pasoActual == 2) {
+            cuentaClienteActual = Integer.parseInt(inputActual);
+            
+            PreparedStatement probarCliente = con.prepareStatement("SELECT nombre, saldo FROM clientes WHERE ncuenta = ?");
+            probarCliente.setInt(1, cuentaClienteActual);
+            ResultSet resultadoCliente = probarCliente.executeQuery();
+            
+            if (!resultadoCliente.next()) {
+                Pantalla.setText("La cuenta bancaria no existe.\nIngrese el No. de CUENTA:\n ");
                 resultadoCliente.close();
                 probarCliente.close();
                 con.close();
-
-                pasoActual = 2;
                 inputActual = "";
-                Pantalla.setText("Cliente: " + nombreCliente + "\nIngrese el MONTO a retirar:\n ");
+                return;
+            }
+            
+            String nombreCliente = resultadoCliente.getString("nombre");
+            resultadoCliente.close();
+            probarCliente.close();
+            con.close();
 
-            } else if (pasoActual == 2) {
-                int monto = Integer.parseInt(inputActual);
-                
-                if (monto % 10 != 0 || monto % 10000 != 0) {
-                    Pantalla.setText("Ingrese monto válido (múltiplos de 10k)");
-                    inputActual = "";
-                    con.close();
-                    return;
+            pasoActual = 3; 
+            inputActual = "";
+            
+            String textoMonto = (tipoOperacion == 1) ? "Ingrese el MONTO a consignar:\n> " : "Ingrese el MONTO a retirar:\n> ";
+            Pantalla.setText("Cliente: " + nombreCliente + "\n" + textoMonto);
+
+        } else if (pasoActual == 3) {
+            int monto = Integer.parseInt(inputActual);
+            
+            if (monto % 10 != 0 || monto % 10000 != 0) {
+                Pantalla.setText("Ingrese monto válido (múltiplos de 10k)");
+                inputActual = "";
+                con.close();
+                return;
+            }
+            if (monto < 10000 || monto > 1000000) {
+                Pantalla.setText("Monto fuera de rango ($10k - $1M)");
+                inputActual = "";
+                con.close();
+                return;
+            }
+
+            PreparedStatement bloquearCajero = con.prepareStatement("UPDATE cajeros SET estado = 1 WHERE id = ?");
+            bloquearCajero.setInt(1, idCajeroActual);
+            bloquearCajero.executeUpdate();
+            bloquearCajero.close();
+
+            PreparedStatement bloquearCliente = con.prepareStatement("UPDATE clientes SET estado = 1 WHERE ncuenta = ?");
+            bloquearCliente.setInt(1, cuentaClienteActual);
+            bloquearCliente.executeUpdate();
+            bloquearCliente.close();
+
+            PreparedStatement consultaCliente = con.prepareStatement("SELECT nombre, saldo FROM clientes WHERE ncuenta = ?");
+            consultaCliente.setInt(1, cuentaClienteActual);
+            ResultSet resCli = consultaCliente.executeQuery();
+            resCli.next();
+            String nombreCliente = resCli.getString("nombre");
+            double saldoCliente = resCli.getDouble("saldo");
+            resCli.close();
+            consultaCliente.close();
+
+            PreparedStatement consultaCajero = con.prepareStatement("SELECT ndiez, nveinte, ncincuenta, ncien FROM cajeros WHERE id = ?");
+            consultaCajero.setInt(1, idCajeroActual);
+            ResultSet resCaj = consultaCajero.executeQuery();
+            resCaj.next();
+            int stock10 = resCaj.getInt("ndiez");
+            int stock20 = resCaj.getInt("nveinte");
+            int stock50 = resCaj.getInt("ncincuenta");
+            int stock100 = resCaj.getInt("ncien");
+            resCaj.close();
+            consultaCajero.close();
+
+            int cienk = 0, cincuentak = 0, veintek = 0, diesk = 0;
+            int temp = monto;
+            
+            if (monto == 50000){
+                veintek = 2; diesk = 1;
+            } else if (monto == 100000){
+                cincuentak = 1; veintek = 2; diesk = 1;
+            } else {
+                if (monto > 100000) {
+                    cincuentak += 1; veintek += 2; diesk += 1; temp -= 100000;
                 }
-                if (monto < 10000 || monto > 1000000) {
-                    Pantalla.setText("Monto fuera de rango ($10k - $1M)");
-                    inputActual = "";
-                    con.close();
-                    return;
-                }
+                if (temp >= 100000) { cienk += temp / 100000; temp %= 100000; }
+                if (temp >= 50000) { cincuentak += temp / 50000; temp %= 50000; }
+                if (temp >= 20000) { veintek += temp / 20000; temp %= 20000; }
+                if (temp >= 10000) { diesk += temp / 10000; temp %= 10000; }
+            }
 
-                PreparedStatement bloquearCajero = con.prepareStatement("UPDATE cajeros SET estado = 1 WHERE id = ?");
-                bloquearCajero.setInt(1, idCajeroActual);
-                bloquearCajero.executeUpdate();
-                bloquearCajero.close();
-
-                PreparedStatement bloquearCliente = con.prepareStatement("UPDATE clientes SET estado = 1 WHERE ncuenta = ?");
-                bloquearCliente.setInt(1, cuentaClienteActual);
-                bloquearCliente.executeUpdate();
-                bloquearCliente.close();
-
-                PreparedStatement consultaCliente = con.prepareStatement("SELECT nombre, saldo FROM clientes WHERE ncuenta = ?");
-                consultaCliente.setInt(1, cuentaClienteActual);
-                ResultSet resCli = consultaCliente.executeQuery();
-                resCli.next();
-                String nombreCliente = resCli.getString("nombre");
-                double saldoCliente = resCli.getDouble("saldo");
-                resCli.close();
-                consultaCliente.close();
-
+// Retiro del cajero :(
+            if (tipoOperacion == 0) {
                 if (saldoCliente < monto) {
                     Pantalla.setText("Saldo insuficiente. Su saldo es: $" + saldoCliente);
                     liberarSistema(con);
                     inputActual = "";
-                    pasoActual = 1; 
+                    pasoActual = 2; 
                     con.close();
                     return;
-                }
-
-                PreparedStatement consultaCajero = con.prepareStatement("SELECT ndiez, nveinte, ncincuenta, ncien FROM cajeros WHERE id = ?");
-                consultaCajero.setInt(1, idCajeroActual);
-                ResultSet resCaj = consultaCajero.executeQuery();
-                resCaj.next();
-                int stock10 = resCaj.getInt("ndiez");
-                int stock20 = resCaj.getInt("nveinte");
-                int stock50 = resCaj.getInt("ncincuenta");
-                int stock100 = resCaj.getInt("ncien");
-                resCaj.close();
-                consultaCajero.close();
-
-                int cienk = 0, cincuentak = 0, veintek = 0, diesk = 0;
-                int temp = monto;
-                
-                if (monto == 50000){
-                    veintek = 2; diesk = 1;
-                } else if (monto == 100000){
-                    cincuentak = 1; veintek = 2; diesk = 1;
-                } else {
-                    if (monto > 100000) {
-                        cincuentak += 1; veintek += 2; diesk += 1; temp -= 100000;
-                    }
-                    if (temp >= 100000) { cienk += temp / 100000; temp %= 100000; }
-                    if (temp >= 50000) { cincuentak += temp / 50000; temp %= 50000; }
-                    if (temp >= 20000) { veintek += temp / 20000; temp %= 20000; }
-                    if (temp >= 10000) { diesk += temp / 10000; temp %= 10000; }
                 }
 
                 if (stock100 < cienk || stock50 < cincuentak || stock20 < veintek || stock10 < diesk) {
                     Pantalla.setText("No hay fondo suficiente de billetes en este cajero.");
                     liberarSistema(con);
                     inputActual = "";
-                    pasoActual = 1;
+                    pasoActual = 2;
                     con.close();
                     return;
                 }
 
                 double nuevoSaldo = saldoCliente - monto;
+                
                 PreparedStatement actualizarCliente = con.prepareStatement("UPDATE clientes SET saldo = ? WHERE ncuenta = ?");
                 actualizarCliente.setDouble(1, nuevoSaldo);
                 actualizarCliente.setInt(2, cuentaClienteActual);
@@ -574,42 +599,65 @@ public class interfaz4 extends javax.swing.JFrame {
                 actualizarCajero.close();
 
                 liberarSistema(con);
-                
-                String mensaje = "Su transacción fue realizada con éxito.\n" +
-                                 "El retiro fue de un valor de " + monto + "\n" +
+
+                String mensaje = "¡Retiro realizado con éxito!\n" +
+                                 "Valor retirado: $" + monto + "\n" +
                                  "Cliente: " + nombreCliente + "\n" +
                                  "Billetes entregados:";
+                if (cienk > 0) mensaje += "\n- 100k: " + cienk;
+                if (cincuentak > 0) mensaje += "\n- 50k: " + cincuentak;
+                if (veintek > 0) mensaje += "\n- 20k: " + veintek;
+                if (diesk > 0) mensaje += "\n- 10k: " + diesk;
                 
-                if (cienk > 0) {
-                    mensaje += "\n- 100k: " + cienk;
-                }
-                if (cincuentak > 0) {
-                    mensaje += "\n- 50k: " + cincuentak;
-                }
-                if (veintek > 0) {
-                    mensaje += "\n- 20k: " + veintek;
-                }
-                if (diesk > 0) {
-                    mensaje += "\n- 10k: " + diesk;
-                }
-                
-                mensaje += "\nSaldo restante en cuenta: $" + nuevoSaldo;
-                
+                mensaje += "\nSaldo restante: $" + nuevoSaldo;
                 Pantalla.setText(mensaje);
-                cargarDatosTabla(); 
+// Consignar en el cajero :) 
+            } else {
+                double nuevoSaldo = saldoCliente + monto;
 
-                inputActual = "";
-                pasoActual = 0; 
-                con.close();
+                PreparedStatement actualizarCliente = con.prepareStatement("UPDATE clientes SET saldo = ? WHERE ncuenta = ?");
+                actualizarCliente.setDouble(1, nuevoSaldo);
+                actualizarCliente.setInt(2, cuentaClienteActual);
+                actualizarCliente.executeUpdate();
+                actualizarCliente.close();
+
+                PreparedStatement actualizarCajero = con.prepareStatement("UPDATE cajeros SET ndiez = ?, nveinte = ?, ncincuenta = ?, ncien = ? WHERE id = ?");
+                actualizarCajero.setInt(1, stock10 + diesk);
+                actualizarCajero.setInt(2, stock20 + veintek);
+                actualizarCajero.setInt(3, stock50 + cincuentak);
+                actualizarCajero.setInt(4, stock100 + cienk);
+                actualizarCajero.setInt(5, idCajeroActual);
+                actualizarCajero.executeUpdate();
+                actualizarCajero.close();
+
+                liberarSistema(con);
+
+                String mensaje = "¡Consignación realizada con éxito!\n" +
+                                 "Valor consignado: $" + monto + "\n" +
+                                 "Cliente: " + nombreCliente + "\n" +
+                                 "Billetes ingresados al cajero:";
+                if (cienk > 0) mensaje += "\n- 100k: " + cienk;
+                if (cincuentak > 0) mensaje += "\n- 50k: " + cincuentak;
+                if (veintek > 0) mensaje += "\n- 20k: " + veintek;
+                if (diesk > 0) mensaje += "\n- 10k: " + diesk;
+                
+                mensaje += "\nNuevo saldo en cuenta: $" + nuevoSaldo;
+                Pantalla.setText(mensaje);
             }
 
-        } catch (NumberFormatException e) {
-            Pantalla.setText("Ingrese solo números válidos");
+            cargarDatosTabla(); 
             inputActual = "";
-        } catch (SQLException e) {
-            Pantalla.setText("Error SQL: " + e.getMessage());
-            inputActual = "";
+            pasoActual = 0; 
+            con.close();
         }
+
+    } catch (NumberFormatException e) {
+        Pantalla.setText("Ingrese solo números válidos");
+        inputActual = "";
+    } catch (SQLException e) {
+        Pantalla.setText("Error SQL: " + e.getMessage());
+        inputActual = "";
+    }
     }//GEN-LAST:event_btnIngresarActionPerformed
 
     private void btnCorreccionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCorreccionActionPerformed
@@ -626,7 +674,7 @@ public class interfaz4 extends javax.swing.JFrame {
         }
         inputActual = "";
         pasoActual = 0;
-        Pantalla.setText("Ingrese el ID del Cajero (1 - 7):\n> ");
+        Pantalla.setText("Seleccione:\n1. Consignación\n0. Retiro\n> ");
     }//GEN-LAST:event_btnCancelarActionPerformed
 
     private void salirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_salirActionPerformed
