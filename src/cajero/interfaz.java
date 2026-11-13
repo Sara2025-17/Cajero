@@ -750,37 +750,86 @@ public class interfaz extends javax.swing.JFrame {
 
     private void editar1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editar1ActionPerformed
     String textoId = id1.getText().trim();
-    if (textoId.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Busca primero el ID del cajero que vas a editar.", "Advertencia", JOptionPane.WARNING_MESSAGE);
-        return;
-    }
 
-    Connection con = conectar();
-    if (con == null) return;
-
-    try {
-        String queryUpdate = "UPDATE cajeros SET ndiez = ?, nveinte = ?, ncincuenta = ?, ncien = ? WHERE id = ?";
-        PreparedStatement actualizarRegistro = con.prepareStatement(queryUpdate);
-        actualizarRegistro.setInt(1, Integer.parseInt(diez.getText().trim()));
-        actualizarRegistro.setInt(2, Integer.parseInt(veinte.getText().trim()));
-        actualizarRegistro.setInt(3, Integer.parseInt(cincuenta.getText().trim()));
-        actualizarRegistro.setInt(4, Integer.parseInt(cien.getText().trim()));
-        actualizarRegistro.setInt(5, Integer.parseInt(textoId));
-
-        int filas = actualizarRegistro.executeUpdate();
-        if (filas > 0) {
-            salida.setText("¡Cajero actualizado con éxito!");
-            consultar1ActionPerformed(null);
-        } else {
-            salida.setText("No se pudo actualizar el cajero.");
+        if (textoId.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Por favor, ingresa primero el ID del cajero que deseas editar.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-        actualizarRegistro.close();
-        con.close();
-    } catch (SQLException ex) {
-        salida.setText("Error al actualizar cajero: " + ex.getMessage());
-    } catch (NumberFormatException ex) {
-        salida.setText("Error: Todos los campos deben ser numéricos.");
-    }
+
+        Connection con = conectar();
+        if (con == null) return;
+
+        try {
+            // PASO 1: Si los campos de billetes están vacíos, busca el cajero y carga sus datos actuales
+            if (diez.getText().trim().isEmpty() && veinte.getText().trim().isEmpty() && 
+                cincuenta.getText().trim().isEmpty() && cien.getText().trim().isEmpty()) {
+                
+                String queryEstado = "UPDATE cajeros SET estado = 1 WHERE id = ?";
+                PreparedStatement estado = con.prepareStatement(queryEstado);
+                estado.setInt(1, Integer.parseInt(textoId));
+                estado.executeUpdate();
+                estado.close();
+
+                String querySelect = "SELECT * FROM cajeros WHERE id = ?";
+                PreparedStatement seleccion = con.prepareStatement(querySelect);
+                seleccion.setInt(1, Integer.parseInt(textoId));
+                ResultSet res = seleccion.executeQuery();
+
+                if (res.next()) {
+                    diez.setText(String.valueOf(res.getInt("ndiez")));
+                    veinte.setText(String.valueOf(res.getInt("nveinte")));
+                    cincuenta.setText(String.valueOf(res.getInt("ncincuenta")));
+                    cien.setText(String.valueOf(res.getInt("ncien")));
+
+                    salida.setText("¡Datos del cajero cargados! El estado cambió a 1. Modifica los billetes y haz clic en Editar para guardar.");
+                } else {
+                    salida.setText("No se encontró ningún cajero con ese ID.");
+                }
+                res.close();
+                seleccion.close();
+                consultar1ActionPerformed(null);
+
+            } else {
+                // PASO 2: Si ya hay datos en las cajas, valida que ninguno esté vacío y guarda cambios
+                if (diez.getText().trim().isEmpty() || 
+                    veinte.getText().trim().isEmpty() || 
+                    cincuenta.getText().trim().isEmpty() || 
+                    cien.getText().trim().isEmpty()) {
+                    
+                    JOptionPane.showMessageDialog(this, "Error: No se pueden dejar campos de billetes vacíos para guardar.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+                    con.close();
+                    return;
+                }
+
+                String queryUpdate = "UPDATE cajeros SET ndiez = ?, nveinte = ?, ncincuenta = ?, ncien = ?, estado = 0 WHERE id = ?";
+                PreparedStatement actualizarRegistro = con.prepareStatement(queryUpdate);
+                actualizarRegistro.setInt(1, Integer.parseInt(diez.getText().trim()));
+                actualizarRegistro.setInt(2, Integer.parseInt(veinte.getText().trim()));
+                actualizarRegistro.setInt(3, Integer.parseInt(cincuenta.getText().trim()));
+                actualizarRegistro.setInt(4, Integer.parseInt(cien.getText().trim()));
+                actualizarRegistro.setInt(5, Integer.parseInt(textoId));
+
+                int filasAfectadas = actualizarRegistro.executeUpdate();
+                if (filasAfectadas > 0) {
+                    salida.setText("¡Cajero modificado y actualizado con éxito!");
+                    diez.setText("");
+                    veinte.setText("");
+                    cincuenta.setText("");
+                    cien.setText("");
+                    id1.setText("");
+                    consultar1ActionPerformed(null);
+                } else {
+                    salida.setText("No se pudo actualizar el cajero.");
+                }
+                actualizarRegistro.close();
+            }
+
+            con.close();
+        } catch (SQLException ex) {
+            salida.setText("Error en la base de datos: " + ex.getMessage());
+        } catch (NumberFormatException ex) {
+            salida.setText("Error: El ID y los billetes deben ser valores numéricos válidos.");
+        }
     }//GEN-LAST:event_editar1ActionPerformed
 
     private void eliminar1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_eliminar1ActionPerformed
